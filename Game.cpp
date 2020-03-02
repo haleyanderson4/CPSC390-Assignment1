@@ -207,7 +207,7 @@ bool Game::findRegularPath(Square* currentNode)
 }
 
 bool Game::findAStarPath(Square* currentNode, vector<Square*> allPossibleSteps)
-{
+{cout << "hi" << endl;
   int currRow = currentNode->getRow();
   int currCol = currentNode->getCol();
 
@@ -215,33 +215,50 @@ bool Game::findAStarPath(Square* currentNode, vector<Square*> allPossibleSteps)
 
   auto it = possibleNextStep.begin();
   while(it != possibleNextStep.end())
-  {
+  {cout << "hi2" << endl;
     Square* temp = *it;
     int row = temp->getRow();
     int col = temp->getCol();
+    int cost = temp->getPathCost();
 
-    board[row][col]->setPreviousSquare(&board[currRow][currCol]);
+    board[row][col].setStepCost(currentNode->getStepCost() + 1);
+    board[row][col].setTotalPathCost(currentNode->getStepCost() + cost + 1);
+    board[row][col].setPreviousSquare(&board[currRow][currCol]);
     allPossibleSteps.push_back(temp);
+
+    ++it;
   }
 
   // Vector Sort Method from: https://www.geeksforgeeks.org/sorting-a-vector-in-c/
   sort(allPossibleSteps.begin(), allPossibleSteps.end(), compareAStarSort);
-
+  // This will sort the smallest at the back
+cout << "hi3" << endl;
   int frontRow = allPossibleSteps.front()->getRow();
   int frontCol = allPossibleSteps.front()->getCol();
   board[frontRow][frontCol].setVisted(true);
-  board[frontRow][frontCol].setPathCost(board[frontRow][frontCol].getPreviousSquare()->getPathCost() + 1);
+  board[frontRow][frontCol].setPathCost(board[frontRow][frontCol].getPreviousSquare()->getStepCost() + 1);
 
-  pathVec.push_back(allPossibleSteps.front());
-
-  if(allPossibleSteps.front()->getType() == 4)
+cout << "hi4" << endl;
+  if(allPossibleSteps.back()->getType() == 4)
   {
+    //trace path back
+    Square* temp = allPossibleSteps.back();
+    for(int i = 0; i < temp->getStepCost(); i++)
+    {
+      int row = temp->getRow();
+      int col = temp->getCol();
+
+      board[row][col].setOnPath(true);
+
+      temp = temp->getPreviousSquare();
+    }
+
     return true; // goal is found!
   }
 
-  allPossibleSteps.front()->setPreviousSquare(&board[currRow][currCol]);
-
-  return findAStarPath(allPossibleSteps.front(), allPossibleSteps);
+  Square* temp = allPossibleSteps.back();
+  allPossibleSteps.pop_back();
+  return findAStarPath(temp, allPossibleSteps);
 }
 
 vector<Square*> Game::findNextSquare(int currRow, int currCol)
