@@ -79,7 +79,7 @@ bool Game::createBoard(string filename)
             if(type == 3)
             {
               board[lineCounter][charCounter].setVisted(true);
-              board[lineCounter][charCounter].setPathCost(-1);
+              board[lineCounter][charCounter].setPathCost(0);
               pathVec.push_back(&board[lineCounter][charCounter]);
             } // insert pointer to the intial state as the start of the path vector
           }
@@ -207,43 +207,45 @@ bool Game::findRegularPath(Square* currentNode)
 }
 
 bool Game::findAStarPath(Square* currentNode, vector<Square*> allPossibleSteps)
-{cout << "hi" << endl;
+{
   int currRow = currentNode->getRow();
   int currCol = currentNode->getCol();
-
+cout << currRow << "  ||  " << currCol << endl;
   vector<Square*> possibleNextStep = findNextSquare(currRow, currCol);
 
   auto it = possibleNextStep.begin();
   while(it != possibleNextStep.end())
-  {cout << "hi2" << endl;
+  {
     Square* temp = *it;
     int row = temp->getRow();
     int col = temp->getCol();
-    int cost = temp->getPathCost();
 
     board[row][col].setStepCost(currentNode->getStepCost() + 1);
-    board[row][col].setTotalPathCost(currentNode->getStepCost() + cost + 1);
+    board[row][col].setTotalPathCost(board[row][col].getStepCost() + board[row][col].getPathCost());
     board[row][col].setPreviousSquare(&board[currRow][currCol]);
+
+    temp->setTotalPathCost(board[row][col].getTotalPathCost());
     allPossibleSteps.push_back(temp);
 
     ++it;
   }
-
+cout << currentNode->getTotalPathCost() << endl;
   // Vector Sort Method from: https://www.geeksforgeeks.org/sorting-a-vector-in-c/
   sort(allPossibleSteps.begin(), allPossibleSteps.end(), compareAStarSort);
   // This will sort the smallest at the back
-cout << "hi3" << endl;
-  int frontRow = allPossibleSteps.front()->getRow();
-  int frontCol = allPossibleSteps.front()->getCol();
-  board[frontRow][frontCol].setVisted(true);
-  board[frontRow][frontCol].setPathCost(board[frontRow][frontCol].getPreviousSquare()->getStepCost() + 1);
 
-cout << "hi4" << endl;
+  int frontRow = allPossibleSteps.back()->getRow();
+  int frontCol = allPossibleSteps.back()->getCol();
+  board[frontRow][frontCol].setVisted(true);
+  board[frontRow][frontCol].setStepCost(board[frontRow][frontCol].getPreviousSquare()->getStepCost() + 1);
+
   if(allPossibleSteps.back()->getType() == 4)
   {
     //trace path back
     Square* temp = allPossibleSteps.back();
-    for(int i = 0; i < temp->getStepCost(); i++)
+    int steps = temp->getStepCost();
+
+    for(int i = 0; i < steps; i++)
     {
       int row = temp->getRow();
       int col = temp->getCol();
@@ -252,12 +254,15 @@ cout << "hi4" << endl;
 
       temp = temp->getPreviousSquare();
     }
+cout << currentNode->getTotalPathCost() << endl;
+    totalPathCost = currentNode->getTotalPathCost() + 1;
 
     return true; // goal is found!
   }
 
   Square* temp = allPossibleSteps.back();
   allPossibleSteps.pop_back();
+
   return findAStarPath(temp, allPossibleSteps);
 }
 
@@ -380,7 +385,7 @@ bool Game::compareRegSort(Square* sq1, Square* sq2) {
 }
 
 bool Game::compareAStarSort(Square* sq1, Square* sq2) {
-  return (sq1->getTotalPathCost() < sq2->getTotalPathCost());
+  return (sq1->getTotalPathCost() > sq2->getTotalPathCost());
 }
 
 bool Game::printMap()
