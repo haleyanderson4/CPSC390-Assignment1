@@ -79,7 +79,7 @@ bool Game::createBoard(string filename)
             if(type == 3)
             {
               board[lineCounter][charCounter].setVisted(true);
-              board[lineCounter][charCounter].setPathCost(0);
+              board[lineCounter][charCounter].setPathCost(-1);
               pathVec.push_back(&board[lineCounter][charCounter]);
             } // insert pointer to the intial state as the start of the path vector
           }
@@ -210,7 +210,7 @@ bool Game::findAStarPath(Square* currentNode, vector<Square*> allPossibleSteps)
 {
   int currRow = currentNode->getRow();
   int currCol = currentNode->getCol();
-cout << currRow << "  ||  " << currCol << endl;
+
   vector<Square*> possibleNextStep = findNextSquare(currRow, currCol);
 
   auto it = possibleNextStep.begin();
@@ -229,7 +229,7 @@ cout << currRow << "  ||  " << currCol << endl;
 
     ++it;
   }
-cout << currentNode->getTotalPathCost() << endl;
+
   // Vector Sort Method from: https://www.geeksforgeeks.org/sorting-a-vector-in-c/
   sort(allPossibleSteps.begin(), allPossibleSteps.end(), compareAStarSort);
   // This will sort the smallest at the back
@@ -238,6 +238,7 @@ cout << currentNode->getTotalPathCost() << endl;
   int frontCol = allPossibleSteps.back()->getCol();
   board[frontRow][frontCol].setVisted(true);
   board[frontRow][frontCol].setStepCost(board[frontRow][frontCol].getPreviousSquare()->getStepCost() + 1);
+  board[frontRow][frontCol].setTotalPathCost(board[frontRow][frontCol].getStepCost() + board[frontRow][frontCol].getPathCost() + currentNode->getTotalPathCost());
 
   if(allPossibleSteps.back()->getType() == 4)
   {
@@ -254,7 +255,7 @@ cout << currentNode->getTotalPathCost() << endl;
 
       temp = temp->getPreviousSquare();
     }
-cout << currentNode->getTotalPathCost() << endl;
+
     totalPathCost = currentNode->getTotalPathCost() + 1;
 
     return true; // goal is found!
